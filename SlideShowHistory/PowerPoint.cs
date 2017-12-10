@@ -92,7 +92,11 @@ namespace SlideShowHistory
                     dialog.Show();
 
                     // calculate positions
-                    
+                    var loc = new Point(System.Windows.Forms.Screen.AllScreens[i + 2].Bounds.X, System.Windows.Forms.Screen.AllScreens[i + 2].Bounds.Y);
+                    dialog.Location = loc;
+                    dialog.MaximumSize = System.Windows.Forms.Screen.AllScreens[i + 2].WorkingArea.Size;
+                    dialog.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+                    dialog.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
 
                     historyDialogs.Add(dialog);
                 }
