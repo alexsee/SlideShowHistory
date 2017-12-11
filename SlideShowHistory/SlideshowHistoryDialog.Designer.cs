@@ -37,6 +37,7 @@
             this.BackColor = System.Drawing.Color.Black;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.ClientSize = new System.Drawing.Size(284, 261);
+            this.DoubleBuffered = true;
             this.Name = "SlideshowHistoryDialog";
             this.Text = "TK SlideHistory";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.SlideshowHistoryDialog_FormClosing);

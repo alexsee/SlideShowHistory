@@ -30,6 +30,8 @@ namespace SlideShowHistory
 
         public event EventHandler<PowerPointStatus> StatusChanged;
 
+        private int slideIndex = 0;
+
         public enum PowerPointStatus
         {
             CONNECTED, DISCONNECTED
@@ -48,7 +50,7 @@ namespace SlideShowHistory
             screenshotTimer.Elapsed += ScreenshotCapture;
 
             isActiveTimer = new Timer();
-            isActiveTimer.Interval = 1000;
+            isActiveTimer.Interval = 5000;
             isActiveTimer.Elapsed += IsActiveTimer_Elapsed;
             isActiveTimer.Enabled = true;
 
@@ -59,7 +61,13 @@ namespace SlideShowHistory
         {
             if (powerpointInstance == null)
             {
-                InitializePowerpoint();
+                if(!InitializePowerpoint())
+                {
+                    screenshotTimer.Enabled = false;
+                    powerpointInstance = null;
+                    OnStatusChanged(PowerPointStatus.DISCONNECTED);
+                    return;
+                }
             }
 
             try
@@ -67,8 +75,12 @@ namespace SlideShowHistory
                 var currentApp = powerpointInstance.Active;
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // powerpoint is busy, so ignore exception message
+                if (ex.HResult == -2147417846)
+                    return;
+
                 screenshotTimer.Enabled = false;
                 powerpointInstance = null;
                 OnStatusChanged(PowerPointStatus.DISCONNECTED);
@@ -92,11 +104,13 @@ namespace SlideShowHistory
                     dialog.Show();
 
                     // calculate positions
-                    var loc = new Point(System.Windows.Forms.Screen.AllScreens[i + 2].Bounds.X, System.Windows.Forms.Screen.AllScreens[i + 2].Bounds.Y);
+                    System.Windows.Forms.Screen screen = Screenshot.GetMonitor(i + 2);
+
+                    var loc = new Point(screen.Bounds.X, screen.Bounds.Y);
                     dialog.Location = loc;
-                    dialog.MaximumSize = System.Windows.Forms.Screen.AllScreens[i + 2].WorkingArea.Size;
-                    dialog.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+                    dialog.WindowState = System.Windows.Forms.FormWindowState.Normal;
                     dialog.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+                    dialog.Bounds = screen.Bounds;
 
                     historyDialogs.Add(dialog);
                 }
@@ -134,8 +148,6 @@ namespace SlideShowHistory
 
             try
             {
-                int slideIndex = powerpointInstance.SlideShowWindows[1].View.Slide.SlideIndex;
-
                 if (slideScreenshots.ContainsKey(slideIndex))
                 {
                     Image previous = slideScreenshots[slideIndex];
@@ -208,6 +220,8 @@ namespace SlideShowHistory
 
         private void Powerpoint_SlideShowNextSlide(pp.SlideShowWindow Wn)
         {
+            slideIndex = Wn.View.Slide.SlideIndex;
+
             // get current new slide index
             var index = Wn.View.Slide.SlideIndex;
             Image screen;
