@@ -191,6 +191,11 @@ namespace SlideShowHistory
                     powerpointInstance.SlideShowEnd += Powerpoint_SlideShowEnd;
                     powerpointInstance.SlideShowNextSlide += Powerpoint_SlideShowNextSlide;
 
+                    if(powerpointInstance.Presentations.Count == 0)
+                    {
+                        Program.ShowBalloon("No active presentation", "Open a PowerPoint presentation and allow editing permissions.", System.Windows.Forms.ToolTipIcon.Info);
+                    }
+
                     OnStatusChanged(PowerPointStatus.CONNECTED);
                     return true;
                 }

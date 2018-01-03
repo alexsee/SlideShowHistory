@@ -72,5 +72,10 @@ namespace SlideShowHistory
         {
             pp.InitializePowerpoint();
         }
+
+        public static void ShowBalloon(string title, string text, ToolTipIcon icon)
+        {
+            notifyIcon.ShowBalloonTip(5000, title, text, icon);
+        }
     }
 }
