@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net.Config;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ namespace SlideShowHistory
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            XmlConfigurator.ConfigureAndWatch(new System.IO.FileInfo("log4net.xml"));
 
             // get screens
             int screenCount = Screen.AllScreens.Count();

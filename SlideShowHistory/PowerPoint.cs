@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace SlideShowHistory
 {
     public class PowerPoint : IDisposable
     {
+        private static ILog logger = LogManager.GetLogger(typeof(PowerPoint));
+
         private pp.Application powerpointInstance;
 
         private Timer screenshotTimer;
@@ -61,7 +64,7 @@ namespace SlideShowHistory
         {
             if (powerpointInstance == null)
             {
-                if(!InitializePowerpoint())
+                if (!InitializePowerpoint())
                 {
                     screenshotTimer.Enabled = false;
                     powerpointInstance = null;
@@ -84,6 +87,8 @@ namespace SlideShowHistory
                 screenshotTimer.Enabled = false;
                 powerpointInstance = null;
                 OnStatusChanged(PowerPointStatus.DISCONNECTED);
+
+                logger.Error("Failed to check for PowerPoint active.", ex);
             }
         }
 
@@ -97,6 +102,8 @@ namespace SlideShowHistory
             // initialized?
             if (historyDialogs.Count == 0)
             {
+                logger.Debug("Create new slide show windows.");
+
                 for (int i = 0; i < screenCount; i++)
                 {
                     // create new screens for history function
@@ -164,6 +171,8 @@ namespace SlideShowHistory
             {
                 screenshotTimer.Enabled = false;
                 OnStatusChanged(PowerPointStatus.DISCONNECTED);
+
+                logger.Error("Invalid com object during screenshot.", ex);
             }
             catch (Exception ex)
             {
@@ -172,6 +181,8 @@ namespace SlideShowHistory
                     screenshotTimer.Enabled = false;
                     OnStatusChanged(PowerPointStatus.DISCONNECTED);
                 }
+
+                logger.Error("Unexpected exception during screenshot.", ex);
             }
         }
 
@@ -191,7 +202,7 @@ namespace SlideShowHistory
                     powerpointInstance.SlideShowEnd += Powerpoint_SlideShowEnd;
                     powerpointInstance.SlideShowNextSlide += Powerpoint_SlideShowNextSlide;
 
-                    if(powerpointInstance.Presentations.Count == 0)
+                    if (powerpointInstance.Presentations.Count == 0)
                     {
                         Program.ShowBalloon("No active presentation", "Open a PowerPoint presentation and allow editing permissions.", System.Windows.Forms.ToolTipIcon.Info);
                     }
@@ -203,6 +214,7 @@ namespace SlideShowHistory
             catch (Exception ex)
             {
                 // do nothing :(
+                logger.Error("Error during PowerPoint initialization.", ex);
             }
 
             OnStatusChanged(PowerPointStatus.DISCONNECTED);
@@ -218,6 +230,8 @@ namespace SlideShowHistory
 
         private void Powerpoint_SlideShowBegin(pp.SlideShowWindow Wn)
         {
+            logger.Debug("New slide show started.");
+
             slideScreenshots.Clear();
             screenshotTimer.Enabled = true;
             currentScreenIndex = 1;
@@ -225,23 +239,31 @@ namespace SlideShowHistory
 
         private void Powerpoint_SlideShowNextSlide(pp.SlideShowWindow Wn)
         {
-            slideIndex = Wn.View.Slide.SlideIndex;
-
-            // get current new slide index
-            var index = Wn.View.Slide.SlideIndex;
-            Image screen;
-
-            var previousIndex = currentScreenIndex > index ? index + 1 : index - 1;
-            currentScreenIndex = index;
-
-            if (slideScreenshots.TryGetValue(previousIndex, out screen))
+            try
             {
-                screenshotList.Insert(0, screen);
-                if (screenshotList.Count > screenCount)
+                slideIndex = Wn.View.Slide.SlideIndex;
+
+                // get current new slide index
+                var index = Wn.View.Slide.SlideIndex;
+                Image screen;
+
+                var previousIndex = currentScreenIndex > index ? index + 1 : index - 1;
+                currentScreenIndex = index;
+
+                if (slideScreenshots.TryGetValue(previousIndex, out screen))
                 {
-                    screenshotList[screenshotList.Count - 1].Dispose();
-                    screenshotList.RemoveAt(screenshotList.Count - 1);
+                    screenshotList.Insert(0, screen);
+                    if (screenshotList.Count > screenCount)
+                    {
+                        screenshotList[screenshotList.Count - 1].Dispose();
+                        screenshotList.RemoveAt(screenshotList.Count - 1);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // do nothing
+                logger.Error("Exception during next slide.", ex);
             }
 
             updateHistoryDialogs();
