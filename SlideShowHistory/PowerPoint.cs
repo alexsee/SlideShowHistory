@@ -131,14 +131,18 @@ namespace SlideShowHistory
                     try
                     {
                         var old = historyDialogs[i].BackgroundImage;
-                        historyDialogs[i].BackgroundImage = new Bitmap(screenshotList[i]);
+
+                        if (screenshotList[i] != null)
+                        {
+                            historyDialogs[i].BackgroundImage = new Bitmap(screenshotList[i]);
+                        }
 
                         if (old != null)
                             old.Dispose();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        logger.Error("Could not change background image of screen " + i + ".", ex);
                     }
                 }
             }
@@ -201,11 +205,6 @@ namespace SlideShowHistory
                     powerpointInstance.SlideShowBegin += Powerpoint_SlideShowBegin;
                     powerpointInstance.SlideShowEnd += Powerpoint_SlideShowEnd;
                     powerpointInstance.SlideShowNextSlide += Powerpoint_SlideShowNextSlide;
-
-                    if (powerpointInstance.Presentations.Count == 0)
-                    {
-                        Program.ShowBalloon("No active presentation", "Open a PowerPoint presentation and allow editing permissions.", System.Windows.Forms.ToolTipIcon.Info);
-                    }
 
                     OnStatusChanged(PowerPointStatus.CONNECTED);
                     return true;

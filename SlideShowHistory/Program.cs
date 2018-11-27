@@ -1,4 +1,6 @@
-﻿using log4net.Config;
+﻿using log4net;
+using log4net.Config;
+using log4net.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +11,8 @@ namespace SlideShowHistory
 {
     static class Program
     {
+        private static ILog logger = LogManager.GetLogger(typeof(Program));
+
         public static PowerPoint pp;
 
         public static NotifyIcon notifyIcon;
@@ -23,6 +27,8 @@ namespace SlideShowHistory
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            Application.ThreadException += Application_ThreadException;
 
             XmlConfigurator.ConfigureAndWatch(new System.IO.FileInfo("log4net.xml"));
 
@@ -57,6 +63,11 @@ namespace SlideShowHistory
             notifyIcon.ContextMenu = contextMenu;
 
             Application.Run();
+        }
+
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            logger.Error("Application ThreadException", e.Exception);
         }
 
         private static void Pp_StatusChanged(object sender, PowerPoint.PowerPointStatus e)
