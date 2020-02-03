@@ -232,8 +232,9 @@ namespace SlideShowHistory
             logger.Debug("New slide show started.");
 
             slideScreenshots.Clear();
+            currentScreenIndex = Wn.View.Slide.SlideIndex;
+
             screenshotTimer.Enabled = true;
-            currentScreenIndex = 1;
         }
 
         private void Powerpoint_SlideShowNextSlide(pp.SlideShowWindow Wn)
@@ -246,7 +247,7 @@ namespace SlideShowHistory
                 var index = Wn.View.Slide.SlideIndex;
                 Image screen;
 
-                var previousIndex = currentScreenIndex > index ? index + 1 : index - 1;
+                var previousIndex = Wn.View.LastSlideViewed.SlideIndex;
                 currentScreenIndex = index;
 
                 if (slideScreenshots.TryGetValue(previousIndex, out screen))
